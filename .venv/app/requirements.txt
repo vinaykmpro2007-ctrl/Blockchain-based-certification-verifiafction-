@@ -1,0 +1,9 @@
+fastapi
+uvicorn
+sqlalchemy
+pydantic
+PyJWT[crypto]
+pwdlib[argon2]
+python-dotenv
+
+reportlab

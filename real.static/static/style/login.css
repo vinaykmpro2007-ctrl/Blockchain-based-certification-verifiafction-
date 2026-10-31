@@ -1,0 +1,70 @@
+.login-shell { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); min-height: 100vh; }
+
+/* ---------- Left: brand + agenda ---------- */
+.login-aside {
+    position: relative; display: flex; flex-direction: column; gap: 28px;
+    padding: 36px clamp(28px, 5vw, 64px);
+    color: #e8eefc;
+    background:
+        radial-gradient(900px 520px at 85% -10%, rgba(44, 200, 255, .22), transparent 60%),
+        radial-gradient(700px 500px at -10% 110%, rgba(10, 98, 240, .35), transparent 60%),
+        var(--navy);
+    overflow: hidden;
+}
+.login-aside .brand { color: #fff; }
+.aside-body { display: grid; gap: 18px; max-width: 520px; margin-block: auto; }
+.aside-logo { width: 168px; height: 168px; object-fit: contain; filter: drop-shadow(0 10px 40px rgba(44, 200, 255, .35)); }
+.login-aside h1 { font-size: clamp(1.9rem, 3.2vw, 2.7rem); font-weight: 800; line-height: 1.1; letter-spacing: -.03em; color: #fff; }
+.aside-lead { color: #b9c8ea; font-size: 1.02rem; max-width: 46ch; }
+.agenda-title { margin-top: 10px; font-size: 1rem; font-weight: 700; color: #fff; }
+.agenda { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+.agenda li { display: flex; gap: 14px; padding: 12px 0; border-top: 1px solid rgba(160, 190, 255, .16); }
+.agenda li:first-child { border-top: 0; }
+.agenda .icon { margin-top: 2px; width: 22px; height: 22px; color: var(--cyan); }
+.agenda strong { display: block; color: #fff; font-weight: 700; }
+.agenda span { color: #aebde0; font-size: .92rem; }
+.aside-foot { color: #7f90b8; font-size: .82rem; }
+
+/* ---------- Right: form ---------- */
+.login-main { display: grid; place-items: center; padding: 32px 20px; background: var(--paper); }
+.login-card {
+    width: min(440px, 100%); padding: 34px;
+    background: #fff; border: 1px solid var(--line); border-radius: 18px; box-shadow: var(--shadow);
+}
+.login-card h2 { font-size: 1.6rem; font-weight: 800; letter-spacing: -.025em; }
+.login-sub { margin: 4px 0 22px; color: var(--ink-3); }
+
+.role-switch { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 4px; margin-bottom: 18px; background: #eaf0fb; border-radius: 12px; }
+.role-btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    min-height: 44px; padding: 0 10px;
+    font: 600 .9rem/1 var(--font); color: var(--ink-2);
+    background: transparent; border: 0; border-radius: 9px; cursor: pointer;
+    transition: background-color .15s, color .15s, box-shadow .15s;
+}
+.role-btn:hover { color: var(--ink); }
+.role-btn.is-active { color: var(--blue-d); background: #fff; box-shadow: 0 1px 3px rgba(11, 27, 61, .15); }
+
+.mode-tabs { display: flex; gap: 22px; margin-bottom: 18px; border-bottom: 1px solid var(--line); }
+.mode-tabs button {
+    padding: 8px 0 10px; margin-bottom: -1px;
+    font: 600 .92rem/1 var(--font); color: var(--ink-3);
+    background: none; border: 0; border-bottom: 2px solid transparent; cursor: pointer;
+}
+.mode-tabs button[aria-selected="true"] { color: var(--blue-d); border-bottom-color: var(--blue); }
+
+#admin-note { margin-bottom: 18px; }
+.login-alt { margin-top: 18px; text-align: center; font-size: .9rem; color: var(--ink-3); }
+
+@media (max-width: 900px) {
+    .login-shell { grid-template-columns: 1fr; }
+    .login-aside { padding: 26px 22px 30px; gap: 18px; }
+    .aside-logo { width: 96px; height: 96px; }
+    .aside-body { margin-block: 0; }
+    .aside-foot { display: none; }
+    .login-main { padding: 22px 16px 40px; align-items: start; }
+    .login-card { padding: 26px 22px; }
+}
+@media (max-width: 560px) {
+    .agenda li:nth-child(n+3) { display: none; }  /* keep the phone view short */
+}

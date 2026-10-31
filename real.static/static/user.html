@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#07142e">
+    <title>CertiChain — Verify a certificate</title>
+    <meta name="description" content="Check a certificate or document by ID, QR code or PDF. Revoked records are flagged immediately.">
+    <link rel="icon" type="image/png" href="/static/img/favicon.png">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
+    <link rel="stylesheet" href="/static/style/app.css">
+    <link rel="stylesheet" href="/static/style/user.css">
+</head>
+
+<body>
+    <header class="site-header">
+        <div class="container bar">
+            <a class="brand" href="#top" aria-label="CertiChain home">
+                <img src="/static/img/logo-96.png" alt="" width="38" height="38">
+                <span>CertiChain</span>
+            </a>
+            <nav class="site-nav" aria-label="Main">
+                <a href="#verify">Verify</a>
+                <a href="#how">How it works</a>
+                <a href="#why">Why CertiChain</a>
+                <a class="btn btn-sm nav-login" id="nav-login" href="/login.html">
+                    <svg class="icon" aria-hidden="true"><use href="/static/img/icons.svg#i-user"></use></svg><span>Log in</span>
+                </a>
+            </nav>
+        </div>
+    </header>
+
+    <main id="top">
+        <section class="hero">
+            <div class="container hero-grid">
+                <div class="hero-copy">
+                    <h1>Check a certificate before you trust it.</h1>
+                    <p class="hero-lead">Enter the ID, scan the QR code or upload the PDF. You see who issued it, who it belongs to, and whether it is still valid. Revoked records are flagged in red.</p>
+                    <ul class="hero-points">
+                        <li><svg class="icon" aria-hidden="true"><use href="/static/img/icons.svg#i-check"></use></svg>Free, no account needed</li>
+                        <li><svg class="icon" aria-hidden="true"><use href="/static/img/icons.svg#i-check"></use></svg>Status is checked live, every time</li>
+                        <li><svg class="icon" aria-hidden="true"><use href="/static/img/icons.svg#i-check"></use></svg>Certificates and ID documents (Aadhaar, PAN, SSLC)</li>
+                    </ul>
+                </div>
+
+                <section class="verify-card" id="verify" aria-labelledby="verify-title">
+                    <h2 id="verify-title">Verify a record</h2>
+
+                    <div class="tabs" role="tablist" aria-label="Verification method">
+                        <button class="tab is-active" type="button" role="tab" id="tab-id" aria-selected="true" aria-controls="panel-id" data-method="id">
+                            <svg class="icon" aria-hidden="true"><use href="/static/img/icons.svg#i-id"></use></svg>ID
+                        </button>
+                        <button class="tab" type="button" role="tab" id="tab-qr" aria-selected="false" aria-controls="panel-qr" data-method="qr" tabindex="-1">
+                            <svg class="icon" aria-hidden="true"><use href="/static/img/icons.svg#i-qr"></use></svg>Scan QR
+                        </button>
+                        <button class="tab" type="button" role="tab" id="tab-pdf" aria-selected="false" aria-controls="panel-pdf" data-method="pdf" tabindex="-1">
+                            <svg class="icon" aria-hidden="true"><use href="/static/img/icons.svg#i-upload"></use></svg>Upload PDF
+                        </button>
+                    </div>
+
+                    <div class="panel" id="panel-id" role="tabpanel" aria-labelledby="tab-id">
+                        <form id="id-form" novalidate>
+                            <div class="field">
+                                <label for="certificate-id">Certificate or document ID</label>
+                                <input class="input input-lg" id="certificate-id" type="text" placeholder="CERT-1A2B3C4D5E6F" autocomplete="off" autocapitalize="characters" spellcheck="false">
+                                <span class="hint">IDs start with CERT- or DOC- and are printed under the QR code.</span>
+                            </div>
+                            <button class="btn btn-primary btn-block btn-lg" type="submit">
+                                <svg class="icon" aria-hidden="true"><use href="/static/img/icons.svg#i-search"></use></svg>Verify
+                            </button>
+                        </form>
+                    </div>
+
+                    <div class="panel" id="panel-qr" role="tabpanel" aria-labelledby="tab-qr" hidden>
+                        <div class="camera" id="camera-box">
+                            <video id="camera-preview" autoplay muted playsinline hidden aria-label="Camera preview"></video>
+                            <div class="camera-idle" id="camera-idle">
+                                <svg class="icon icon-lg" aria-hidden="true"><use href="/static/img/icons.svg#i-camera"></use></svg>
+                                <p>Point your camera at the QR code on the certificate.</p>
+                            </div>
+                            <span class="viewfinder" aria-hidden="true"></span>
+                        </div>
+                        <button class="btn btn-primary btn-block btn-lg" id="camera-toggle" type="button" aria-pressed="false">Start camera</button>
+                        <p class="hint" id="camera-status" role="status" aria-live="polite">Your browser will ask for permission. Nothing is recorded.</p>
+                    </div>
+
+                    <div class="panel" id="panel-pdf" role="tabpanel" aria-labelledby="tab-pdf" hidden>
+                        <form id="pdf-form" novalidate>
+                            <label class="drop" for="certificate-file" id="drop">
+                                <svg class="icon icon-lg" aria-hidden="true"><use href="/static/img/icons.svg#i-upload"></use></svg>
+                                <strong id="drop-title">Choose a certificate PDF</strong>
+                                <span id="drop-sub">We read the ID printed in the file and check it.</span>
+                                <input class="sr-only" id="certificate-file" type="file" accept="application/pdf">
+                            </label>
+                            <button class="btn btn-primary btn-block btn-lg" type="submit">
+                                <svg class="icon" aria-hidden="true"><use href="/static/img/icons.svg#i-search"></use></svg>Verify PDF
+                            </button>
+                        </form>
+                    </div>
+
+                    <div class="result" id="result" role="status" aria-live="polite" hidden></div>
+                </section>
+            </div>
+        </section>
+
+        <section class="section" id="how" aria-labelledby="how-title">
+            <div class="container">
+                <h2 class="section-title" id="how-title">How verification works</h2>
+                <p class="section-sub">Three steps, usually under ten seconds.</p>
+                <ol class="steps">
+                    <li>
+                        <span class="step-no" aria-hidden="true">1</span>
+                        <h3>Find the ID</h3>
+                        <p>Every certificate and document carries a unique ID and a QR code that contains it.</p>
+                    </li>
+                    <li>
+                        <span class="step-no" aria-hidden="true">2</span>
+                        <h3>Enter, scan or upload</h3>
+                        <p>Type the ID, scan the QR code with your camera, or upload the PDF you were sent.</p>
+                    </li>
+                    <li>
+                        <span class="step-no" aria-hidden="true">3</span>
+                        <h3>Read the result</h3>
+                        <p>Green means valid. Red means the issuer revoked it. Compare the name and institution with what you were given.</p>
+                    </li>
+                </ol>
+            </div>
+        </section>
+
+        <section class="section section-alt" id="why" aria-labelledby="why-title">
+            <div class="container">
+                <h2 class="section-title" id="why-title">Why CertiChain</h2>
+                <p class="section-sub">Built so a forged or withdrawn certificate does not pass as genuine.</p>
+                <div class="features">
+                    <article class="feature">
+                        <span class="feature-icon"><svg class="icon" aria-hidden="true"><use href="/static/img/icons.svg#i-shield"></use></svg></span>
+                        <h3>Issued only by the institution</h3>
+                        <p>Only signed-in administrators can issue records, and only under their own institution's name.</p>
+                    </article>
+                    <article class="feature">
+                        <span class="feature-icon"><svg class="icon" aria-hidden="true"><use href="/static/img/icons.svg#i-ban"></use></svg></span>
+                        <h3>Revocation shows instantly</h3>
+                        <p>If an institution withdraws a record, the next check shows it as revoked, with the date.</p>
+                    </article>
+                    <article class="feature">
+                        <span class="feature-icon"><svg class="icon" aria-hidden="true"><use href="/static/img/icons.svg#i-lock"></use></svg></span>
+                        <h3>Private by design</h3>
+                        <p>Aadhaar and PAN numbers are never stored in full. Verifiers see only a masked version.</p>
+                    </article>
+                    <article class="feature">
+                        <span class="feature-icon"><svg class="icon" aria-hidden="true"><use href="/static/img/icons.svg#i-bolt"></use></svg></span>
+                        <h3>Fast on any device</h3>
+                        <p>Works in a phone browser. No app to install and no account to create.</p>
+                    </article>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="site-footer">
+        <div class="container foot">
+            <a class="brand" href="#top"><img src="/static/img/logo-96.png" alt="" width="32" height="32"><span>CertiChain</span></a>
+            <p>Institution admins: <a href="/login.html">sign in to issue certificates</a></p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script>if (window.pdfjsLib) pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';</script>
+    <script src="/static/js/user.js"></script>
+</body>
+
+</html>

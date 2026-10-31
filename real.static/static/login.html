@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#07142e">
+    <title>Sign in — CertiChain</title>
+    <link rel="icon" type="image/png" href="/static/img/favicon.png">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
+    <link rel="stylesheet" href="/static/style/app.css">
+    <link rel="stylesheet" href="/static/style/login.css">
+</head>
+
+<body>
+    <div class="login-shell">
+        <aside class="login-aside" aria-label="About CertiChain">
+            <a class="brand" href="/user.html">
+                <img src="/static/img/logo-96.png" alt="" width="38" height="38">
+                <span>CertiChain</span>
+            </a>
+
+            <div class="aside-body">
+                <img class="aside-logo" src="/static/img/logo-512.png" alt="CertiChain shield and blockchain logo" width="168" height="168">
+                <h1>Certificates anyone can check in seconds.</h1>
+                <p class="aside-lead">Institutions issue records with a unique ID and QR code. Employers, colleges and officials confirm them live, and revoked records show up as revoked everywhere.</p>
+
+                <h2 class="agenda-title">What you can do here</h2>
+                <ul class="agenda">
+                    <li>
+                        <svg class="icon" aria-hidden="true"><use href="/static/img/icons.svg#i-file"></use></svg>
+                        <div><strong>Issue certificates and documents</strong><span>Every record gets its own ID, QR code and downloadable PDF.</span></div>
+                    </li>
+                    <li>
+                        <svg class="icon" aria-hidden="true"><use href="/static/img/icons.svg#i-qr"></use></svg>
+                        <div><strong>Verify with no account</strong><span>Scan the QR code, type the ID or upload the PDF.</span></div>
+                    </li>
+                    <li>
+                        <svg class="icon" aria-hidden="true"><use href="/static/img/icons.svg#i-ban"></use></svg>
+                        <div><strong>Revoke with a reason</strong><span>Revocations are final, logged, and watched for unusual activity.</span></div>
+                    </li>
+                    <li>
+                        <svg class="icon" aria-hidden="true"><use href="/static/img/icons.svg#i-users"></use></svg>
+                        <div><strong>Teams stay inside one institution</strong><span>Admins add colleagues, never people from another institution.</span></div>
+                    </li>
+                </ul>
+            </div>
+
+            <p class="aside-foot">CertiChain &middot; Certificate verification</p>
+        </aside>
+
+        <main class="login-main">
+            <section class="login-card" aria-labelledby="login-title">
+                <h2 id="login-title">Welcome to CertiChain</h2>
+                <p class="login-sub" id="login-sub">Choose how you want to sign in.</p>
+
+                <div class="role-switch" role="group" aria-label="Account type">
+                    <button type="button" class="role-btn is-active" data-role="admin" aria-pressed="true">
+                        <svg class="icon" aria-hidden="true"><use href="/static/img/icons.svg#i-building"></use></svg>
+                        <span>Admin</span>
+                    </button>
+                    <button type="button" class="role-btn" data-role="user" aria-pressed="false">
+                        <svg class="icon" aria-hidden="true"><use href="/static/img/icons.svg#i-user"></use></svg>
+                        <span>Verifier</span>
+                    </button>
+                </div>
+
+                <div class="mode-tabs" id="mode-tabs" role="tablist" aria-label="Sign in or create account" hidden>
+                    <button type="button" role="tab" id="tab-signin" aria-selected="true">Sign in</button>
+                    <button type="button" role="tab" id="tab-signup" aria-selected="false">Create account</button>
+                </div>
+
+                <div class="alert alert-info" id="admin-note">
+                    <svg class="icon" aria-hidden="true"><use href="/static/img/icons.svg#i-info"></use></svg>
+                    <div>New admin accounts are added by an existing admin of your institution, from the Team page of the dashboard.</div>
+                </div>
+
+                <form id="login-form" novalidate>
+                    <div class="field">
+                        <label for="login-name">Username</label>
+                        <input class="input" type="text" id="login-name" name="username" autocomplete="username" autocapitalize="none" spellcheck="false" required>
+                    </div>
+                    <div class="field">
+                        <label for="login-password">Password</label>
+                        <div class="input-wrap">
+                            <input class="input" type="password" id="login-password" name="password" autocomplete="current-password" required>
+                            <button class="reveal" type="button" id="reveal" aria-label="Show password" aria-pressed="false">
+                                <svg class="icon" aria-hidden="true"><use href="/static/img/icons.svg#i-eye"></use></svg>
+                            </button>
+                        </div>
+                        <span class="hint" id="password-hint" hidden>Use at least 12 characters.</span>
+                    </div>
+                    <button class="btn btn-primary btn-block" id="login-submit" type="submit">Sign in as admin</button>
+                    <p class="form-error" id="login-error" role="alert"></p>
+                </form>
+
+                <p class="login-alt">Only want to check a certificate? <a href="/user.html#verify">Verify without signing in</a></p>
+            </section>
+        </main>
+    </div>
+    <script src="/static/js/login.js"></script>
+</body>
+
+</html>

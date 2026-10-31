@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#07142e">
+    <title>Admin dashboard — CertiChain</title>
+    <link rel="icon" type="image/png" href="/static/img/favicon.png">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
+    <link rel="stylesheet" href="/static/style/app.css">
+    <link rel="stylesheet" href="/static/style/admin.css">
+</head>
+
+<body>
+    <div class="shell">
+        <aside class="side" id="side" aria-label="Admin navigation">
+            <div class="side-top">
+                <a class="brand" href="#overview">
+                    <img src="/static/img/logo-96.png" alt="" width="38" height="38">
+                    <span>CertiChain</span>
+                </a>
+                <button class="icon-btn menu-btn" id="menu-btn" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="side-nav">
+                    <svg class="icon" aria-hidden="true"><use href="/static/img/icons.svg#i-menu"></use></svg>
+                </button>
+            </div>
+
+            <nav class="side-nav" id="side-nav">
+                <a href="#overview" data-nav="overview"><svg class="icon" aria-hidden="true"><use href="/static/img/icons.svg#i-grid"></use></svg>Overview</a>
+                <a href="#certificates" data-nav="certificates"><svg class="icon" aria-hidden="true"><use href="/static/img/icons.svg#i-file"></use></svg>Certificates</a>
+                <a href="#documents" data-nav="documents"><svg class="icon" aria-hidden="true"><use href="/static/img/icons.svg#i-id"></use></svg>Documents</a>
+                <a href="#team" data-nav="team"><svg class="icon" aria-hidden="true"><use href="/static/img/icons.svg#i-users"></use></svg>Team</a>
+                <a href="#activity" data-nav="activity"><svg class="icon" aria-hidden="true"><use href="/static/img/icons.svg#i-history"></use></svg>Activity</a>
+
+                <div class="side-user">
+                    <div class="who">
+                        <span class="avatar" id="avatar" aria-hidden="true">?</span>
+                        <div>
+                            <strong id="who-name">Signed in</strong>
+                            <span id="who-inst">&nbsp;</span>
+                        </div>
+                    </div>
+                    <button class="btn btn-ghost btn-sm" id="logout" type="button">
+                        <svg class="icon" aria-hidden="true"><use href="/static/img/icons.svg#i-logout"></use></svg>Log out
+                    </button>
+                </div>
+            </nav>
+        </aside>
+
+        <main class="content" id="content" tabindex="-1">
+
+            <!-- ============ Overview ============ -->
+            <section class="view" data-view="overview" aria-labelledby="h-overview">
+                <header class="page-head">
+                    <div>
+                        <h1 id="h-overview">Overview</h1>
+                        <p class="page-sub" id="overview-sub">Your institution at a glance.</p>
+                    </div>
+                    <a class="btn btn-primary" href="#certificates">
+                        <svg class="icon" aria-hidden="true"><use href="/static/img/icons.svg#i-plus"></use></svg>Issue certificate
+                    </a>
+                </header>
+
+                <div class="alert revoke-alert" id="revoke-alert" role="status" aria-live="polite" hidden>
+                    <svg class="icon" aria-hidden="true"><use href="/static/img/icons.svg#i-info" id="revoke-alert-icon"></use></svg>
+                    <div>
+                        <strong id="revoke-alert-title"></strong>
+                        <span id="revoke-alert-message"></span>
+                        <span class="alert-facts">
+                            <span><b id="revoke-count-own">0</b> revoked by you</span>
+                            <span><b id="revoke-count-institution">0</b> at your institution</span>
+                            <span>last <b id="revoke-window">30</b> days</span>
+                            <span>warning at <b id="revoke-warn-at">3</b>, critical at <b id="revoke-critical-at">5</b></span>
+                        </span>
+                    </div>
+                </div>
+
+                <div class="stats">
+                    <article class="stat">
+                        <span class="stat-icon tone-blue"><svg class="icon" aria-hidden="true"><use href="/static/img/icons.svg#i-file"></use></svg></span>
+                        <div><p>Certificates issued</p><strong id="stat-issued">0</strong></div>
+                    </article>
+                    <article class="stat">
+                        <span class="stat-icon tone-green"><svg class="icon" aria-hidden="true"><use href="/static/img/icons.svg#i-shield"></use></svg></span>
+                        <div><p>Currently valid</p><strong id="stat-valid">0</strong></div>
+                    </article>
+                    <article class="stat">
+                        <span class="stat-icon tone-red"><svg class="icon" aria-hidden="true"><use href="/static/img/icons.svg#i-ban"></use></svg></span>
+                        <div><p>Revoked</p><strong id="stat-revoked">0</strong><small>certificates and documents</small></div>
+                    </article>
+                    <article class="stat">
+                        <span class="stat-icon tone-amber"><svg class="icon" aria-hidden="true"><use href="/static/img/icons.svg#i-id"></use></svg></span>
+                        <div><p>Documents on record</p><strong id="stat-documents">0</strong></div>
+                    </article>
+                </div>
+
+                <div class="card card-pad">
+                    <div class="card-head">
+                        <div><h2>Latest certificates</h2><p class="card-sub">The five most recently issued.</p></div>
+                        <a class="btn btn-sm" href="#certificates">See all</a>
+                    </div>
+                    <div class="table-wrap">
+                        <table class="table" id="recent-table">
+                            <thead><tr><th scope="col">Certificate</th><th scope="col">Student</th><th scope="col">Status</th></tr></thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ============ Certificates ============ -->
+            <section class="view" data-view="certificates" aria-labelledby="h-certificates" hidden>
+                <header class="page-head">
+                    <div>
+                        <h1 id="h-certificates">Certificates</h1>
+                        <p class="page-sub">Issue a certificate, then download its PDF with the verification QR code.</p>
+                    </div>
+                </header>
+
+                <div class="two-col">
+                    <div class="card card-pad">
+                        <div class="card-head"><h2>Issue a certificate</h2></div>
+                        <form id="issue-form" novalidate>
+                            <div class="field">
+                                <label for="std-name">Student name</label>
+                                <input class="input" id="std-name" type="text" placeholder="Asha Rao" autocomplete="off" required>
+                            </div>
+                            <div class="field">
+                                <label for="std-id">Student ID</label>
+                                <input class="input" id="std-id" type="text" placeholder="STU2025001" autocomplete="off" required>
+                            </div>
+                            <div class="field">
+                                <label for="std-course">Course</label>
+                                <input class="input" id="std-course" type="text" placeholder="B.Tech Computer Science" autocomplete="off" required>
+                            </div>
+                            <div class="field">
+                                <label for="std-ins">Institution</label>
+                                <input class="input" id="std-ins" type="text" readonly aria-describedby="ins-hint">
+                                <span class="hint locked-note" id="ins-hint">
+                                    <svg class="icon" aria-hidden="true"><use href="/static/img/icons.svg#i-lock"></use></svg>
+                                    Set by your account. You can only issue for your own institution.
+                                </span>
+                            </div>
+                            <div class="field">
+                                <label for="std-date">Issue date</label>
+                                <input class="input" id="std-date" type="date" required>
+                            </div>
+                            <button class="btn btn-primary btn-block" id="issue-submit" type="submit">Issue certificate</button>
+                            <p class="form-error" id="issue-error" role="alert"></p>
+                        </form>
+                    </div>
+
+                    <div class="stack">
+                        <div class="card card-pad">
+                            <div class="card-head">
+                                <h2>Selected certificate</h2>
+                            </div>
+                            <div class="cert-empty empty" id="cert-empty">
+                                <svg class="icon" aria-hidden="true"><use href="/static/img/icons.svg#i-file"></use></svg>
+                                <strong>Nothing selected</strong>
+                                <span>Choose a certificate from the list to preview it, download the PDF or revoke it.</span>
+                            </div>
+                            <div id="cert-detail" hidden>
+                                <article class="cert-paper" id="cert-paper">
+                                    <span class="stamp" aria-hidden="true">Revoked</span>
+                                    <p class="cert-issuer" id="cp-institution"></p>
+                                    <h3>Certificate of Completion</h3>
+                                    <p class="cert-line">This is to certify that</p>
+                                    <p class="cert-name" id="cp-name"></p>
+                                    <p class="cert-line">has successfully completed</p>
+                                    <p class="cert-course" id="cp-course"></p>
+                                    <div class="cert-meta">
+                                        <span>Issued <b id="cp-date"></b></span>
+                                        <span class="mono" id="cp-id"></span>
+                                    </div>
+                                </article>
+                                <div class="cert-actions">
+                                    <button class="btn btn-primary" id="download-pdf" type="button">
+                                        <svg class="icon" aria-hidden="true"><use href="/static/img/icons.svg#i-download"></use></svg>Download PDF
+                                    </button>
+                                    <button class="btn" id="copy-link" type="button">
+                                        <svg class="icon" aria-hidden="true"><use href="/static/img/icons.svg#i-link"></use></svg>Copy verify link
+                                    </button>
+                                    <button class="btn btn-quiet" id="revoke-selected" type="button" hidden>
+                                        <svg class="icon" aria-hidden="true"><use href="/static/img/icons.svg#i-ban"></use></svg>Revoke
+                                    </button>
+                                </div>
+                                <p class="form-error" id="cert-error" role="alert"></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card card-pad">
+                    <div class="card-head">
+                        <div><h2>Issued certificates</h2><p class="card-sub" id="cert-count">0 certificates</p></div>
+                        <div class="filters">
+                            <label class="sr-only" for="cert-search">Search certificates</label>
+                            <input class="input input-sm" id="cert-search" type="search" placeholder="Search certificates">
+                            <label class="sr-only" for="cert-filter">Filter by status</label>
+                            <select class="select input-sm" id="cert-filter">
+                                <option value="">All statuses</option>
+                                <option value="PENDING">Pending</option>
+                                <option value="VERIFIED">Verified</option>
+                                <option value="REVOKED">Revoked</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="table-wrap">
+                        <table class="table" id="cert-table">
+                            <thead><tr><th scope="col">Certificate</th><th scope="col">Student</th><th scope="col">Course</th><th scope="col">Issued</th><th scope="col">Status</th></tr></thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                    <div class="empty" id="cert-none" hidden>
+                        <svg class="icon" aria-hidden="true"><use href="/static/img/icons.svg#i-search"></use></svg>
+                        <strong id="cert-none-title">No certificates yet</strong>
+                        <span id="cert-none-text">Issue your first certificate with the form above.</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ============ Documents ============ -->
+            <section class="view" data-view="documents" aria-labelledby="h-documents" hidden>
+                <header class="page-head">
+                    <div>
+                        <h1 id="h-documents">Documents</h1>
+                        <p class="page-sub">Aadhaar, PAN and SSLC records, from every issuing institution. Numbers are masked. You can revoke only documents issued by your institution.</p>
+                    </div>
+                </header>
+                <div class="card card-pad">
+                    <div class="table-wrap">
+                        <table class="table" id="documents-table">
+                            <thead><tr><th scope="col">Holder</th><th scope="col">Document</th><th scope="col">Issued by</th><th scope="col">Number</th><th scope="col">Status</th><th scope="col"><span class="sr-only">Actions</span></th></tr></thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                    <div class="empty" id="documents-empty" hidden>
+                        <svg class="icon" aria-hidden="true"><use href="/static/img/icons.svg#i-id"></use></svg>
+                        <strong>No documents yet</strong>
+                        <span>Documents issued through the API will appear here.</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ============ Team ============ -->
+            <section class="view" data-view="team" aria-labelledby="h-team" hidden>
+                <header class="page-head">
+                    <div>
+                        <h1 id="h-team">Team</h1>
+                        <p class="page-sub">Add colleagues so more than one person can manage <span class="inst-name">your institution</span>.</p>
+                    </div>
+                </header>
+                <div class="two-col two-col-even">
+                    <div class="card card-pad">
+                        <div class="card-head"><h2>Add an admin</h2></div>
+                        <form id="team-form" novalidate>
+                            <div class="field">
+                                <label for="team-name">Username</label>
+                                <input class="input" id="team-name" type="text" autocomplete="off" autocapitalize="none" spellcheck="false" required>
+                                <span class="hint">Letters, numbers and . _ - @ only.</span>
+                            </div>
+                            <div class="field">
+                                <label for="team-password">Temporary password</label>
+                                <div class="input-wrap">
+                                    <input class="input" id="team-password" type="password" autocomplete="new-password" minlength="12" required>
+                                    <button class="reveal" id="team-reveal" type="button" aria-label="Show password" aria-pressed="false">
+                                        <svg class="icon" aria-hidden="true"><use href="/static/img/icons.svg#i-eye"></use></svg>
+                                    </button>
+                                </div>
+                                <span class="hint">At least 12 characters. Share it privately; they sign in with it on the login page.</span>
+                            </div>
+                            <div class="field">
+                                <label for="team-inst">Institution</label>
+                                <input class="input" id="team-inst" type="text" readonly aria-describedby="team-inst-hint">
+                                <span class="hint locked-note" id="team-inst-hint">
+                                    <svg class="icon" aria-hidden="true"><use href="/static/img/icons.svg#i-lock"></use></svg>
+                                    New admins always join your institution.
+                                </span>
+                            </div>
+                            <button class="btn btn-primary btn-block" id="team-submit" type="submit">Create admin account</button>
+                            <p class="form-error" id="team-error" role="alert"></p>
+                        </form>
+                    </div>
+                    <div class="card card-pad">
+                        <div class="card-head"><div><h2>Admins at your institution</h2><p class="card-sub" id="team-count"></p></div></div>
+                        <div class="table-wrap">
+                            <table class="table" id="team-table">
+                                <thead><tr><th scope="col">Username</th><th scope="col">Status</th></tr></thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ============ Activity ============ -->
+            <section class="view" data-view="activity" aria-labelledby="h-activity" hidden>
+                <header class="page-head">
+                    <div>
+                        <h1 id="h-activity">Activity</h1>
+                        <p class="page-sub">Every revocation made at your institution, newest first.</p>
+                    </div>
+                </header>
+                <div class="card card-pad">
+                    <div class="table-wrap">
+                        <table class="table" id="revocation-table">
+                            <thead><tr><th scope="col">When (UTC)</th><th scope="col">Item</th><th scope="col">By</th><th scope="col">Reason</th></tr></thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                    <div class="empty" id="revocation-empty" hidden>
+                        <svg class="icon" aria-hidden="true"><use href="/static/img/icons.svg#i-history"></use></svg>
+                        <strong>Nothing has been revoked</strong>
+                        <span>Revocations will be listed here with who did it and why.</span>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <dialog class="dialog" id="revoke-dialog" aria-labelledby="revoke-title">
+        <form id="revoke-form" method="dialog">
+            <div class="dialog-head">
+                <h2 id="revoke-title">Revoke</h2>
+                <button class="icon-btn" type="button" id="revoke-close" aria-label="Close">
+                    <svg class="icon" aria-hidden="true"><use href="/static/img/icons.svg#i-x"></use></svg>
+                </button>
+            </div>
+            <div class="dialog-body">
+                <p><strong id="revoke-target"></strong></p>
+                <p class="card-sub" style="margin-bottom:12px">Revoking cannot be undone. Anyone who verifies this item will see it as revoked.</p>
+                <div class="alert alert-warn" id="revoke-heads-up" role="alert" hidden style="margin-bottom:14px">
+                    <svg class="icon" aria-hidden="true"><use href="/static/img/icons.svg#i-alert"></use></svg>
+                    <div id="revoke-heads-up-text"></div>
+                </div>
+                <div class="field" style="margin-bottom:6px">
+                    <label for="revoke-reason">Reason (saved in the activity log)</label>
+                    <textarea class="textarea" id="revoke-reason" rows="3" minlength="5" maxlength="300" required></textarea>
+                </div>
+                <p class="form-error" id="revoke-error" role="alert"></p>
+            </div>
+            <div class="dialog-foot">
+                <button class="btn" type="button" id="revoke-cancel">Cancel</button>
+                <button class="btn btn-danger" type="submit" id="revoke-confirm">Revoke permanently</button>
+            </div>
+        </form>
+    </dialog>
+
+    <div class="toasts" id="toasts" aria-live="polite"></div>
+    <script src="/static/js/app.js"></script>
+</body>
+
+</html>
