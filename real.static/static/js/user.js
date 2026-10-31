@@ -59,20 +59,16 @@ function row(label, value, keep) {
 function showResult(item) {
     const isDocument = item.kind === 'DOCUMENT';
     const revoked = item.status === 'REVOKED';
-    const pending = item.status === 'PENDING';
     const label = isDocument ? item.doc_type_label : 'Certificate';
 
     result.hidden = false;
-    result.className = `result ${revoked ? 'is-bad' : pending ? 'is-warn' : 'is-ok'}`;
+    result.className = `result ${revoked ? 'is-bad' : 'is-ok'}`;
 
     const head = node('div', 'result-head');
     const text = node('div');
     if (revoked) {
         text.append(node('span', '', `${label} revoked`));
         text.append(node('small', '', `Withdrawn by the issuer${item.revoked_at ? ' on ' + item.revoked_at.slice(0, 10) : ''}. It is no longer valid.`));
-    } else if (pending) {
-        text.append(node('span', '', `${label} found`));
-        text.append(node('small', '', 'Issued by the institution and not revoked.'));
     } else {
         text.append(node('span', '', `Valid ${label.toLowerCase()}`));
         text.append(node('small', '', 'Issued by the institution and not revoked.'));

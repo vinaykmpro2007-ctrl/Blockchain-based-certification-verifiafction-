@@ -53,6 +53,8 @@ function cell(content, className) {
 }
 
 function pill(status) {
+    // PENDING is the stored status until on-chain confirmation exists; to a reader it is simply valid.
+    if (status === 'PENDING') return el('span', 'pill pill-issued', 'Issued');
     const label = status.charAt(0) + status.slice(1).toLowerCase();
     return el('span', `pill pill-${status.toLowerCase()}`, label);
 }
