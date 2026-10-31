@@ -1,8 +1,11 @@
 PASSWORD = "correct-horse-battery"
 
 
-def login(client, username):
-    response = client.post("/api/auth/login", json={"username": username, "password": PASSWORD})
+def login(client, username, institution="NIE Mysuru"):
+    response = client.post(
+        "/api/auth/login",
+        json={"username": username, "password": PASSWORD, "institution": institution},
+    )
     assert response.status_code == 200, response.text
     return {"Authorization": f"Bearer {response.json()['access_token']}"}
 

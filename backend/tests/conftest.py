@@ -55,7 +55,7 @@ def make_admin(client):
             db.close()
 
         response = client.post(
-            "/api/auth/login", json={"username": username, "password": PASSWORD}
+            "/api/auth/login", json={"username": username, "password": PASSWORD, "institution": institution},
         )
         assert response.status_code == 200, response.text
         return {"Authorization": f"Bearer {response.json()['access_token']}"}

@@ -26,7 +26,9 @@ def test_admin_accounts_cannot_be_self_registered(client):
 
 def test_admin_profile_endpoint(client, make_admin):
     headers = make_admin("subhash", "NIE")
-    assert client.get("/api/auth/me", headers=headers).json() == {"username": "subhash", "institution": "NIE"}
+    me = client.get("/api/auth/me", headers=headers).json()
+    assert me["username"] == "subhash" and me["institution"] == "NIE"
+    assert me["verify_base_url"].startswith("http")
 
 
 def test_existing_database_is_upgraded_without_losing_rows(tmp_path: Path):

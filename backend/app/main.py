@@ -3,13 +3,13 @@ import os
 from pathlib import Path
 from uuid import uuid4
 
-from fastapi import FastAPI, Depends, HTTPException, Query, Request, status
+from fastapi import FastAPI, Depends, HTTPException, Query, Request, status, UploadFile, File
 from fastapi.responses import FileResponse, Response
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy.orm import Session
 
 from app.database import engine
-from app import models, schemas, admin_schemas, documents, revocation, certificate_pdf
+from app import models, schemas, admin_schemas, documents, revocation, certificate_pdf, ocr_service
 from app.auth import (
     verify_password,
     get_password_hash,
@@ -102,6 +102,13 @@ def person_dict(person: models.Person) -> dict:
         "full_name": person.full_name,
         "date_of_birth": person.date_of_birth,
         "document_count": len(person.documents),
+        "institutions": sorted(
+            {
+                doc.issuing_institution
+                for doc in person.documents
+                if doc.issuing_institution
+            }
+        ),
         "documents": [
             {
                 "document_id": doc.document_id,
@@ -220,13 +227,10 @@ def revoke_item(
 # Basic endpoints
 # ---------------------------------------------------------------------------
 
-# Home endpoint.
+# Serve the login page as the application home page.
 @app.get("/")
 def home():
-    return {
-        "message": "Welcome to CertiChain API",
-        "status": "running",
-    }
+    return FileResponse(FRONTEND_DIR / "static" / "login.html")
 
 
 # Health check endpoint.
@@ -236,6 +240,52 @@ def health_check():
         "status": "healthy",
         "service": "certichain-backend",
     }
+
+
+# Extract text from an uploaded certificate image or PDF (administrators only).
+# The uploaded file and extracted text are not stored by this endpoint.
+@app.post("/api/ocr/extract")
+async def extract_certificate_text(
+    file: UploadFile = File(...),
+    admin: models.Admin = Depends(get_current_admin),
+):
+    try:
+        if not file.filename:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Filename is missing.",
+            )
+
+        content = await file.read(10 * 1024 * 1024 + 1)
+
+        if len(content) > 10 * 1024 * 1024:
+            raise HTTPException(
+                status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+                detail="File size must be 10 MB or less.",
+            )
+
+        extracted_text = ocr_service.extract_text(content, file.filename)
+
+        return {
+            "message": "OCR completed successfully. Review the extracted text before issuing a document.",
+            "filename": file.filename,
+            "extracted_text": extracted_text,
+        }
+
+    except ValueError as error:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=str(error),
+        )
+    except HTTPException:
+        raise
+    except Exception:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Unable to process this file. Check that it is a valid supported image or PDF.",
+        )
+    finally:
+        await file.close()
 
 
 # ---------------------------------------------------------------------------

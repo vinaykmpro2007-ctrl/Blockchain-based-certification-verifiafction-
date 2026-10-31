@@ -52,8 +52,52 @@ function showHeadOnly(kind, iconName, title, detail) {
 
 function row(label, value, keep) {
     const wrap = node('div');
-    wrap.append(node('dt', '', label), node('dd', keep ? 'keep' : '', value));
+    const dd = node('dd', keep ? 'keep' : '');
+    if (value instanceof Node) dd.append(value); else dd.textContent = value;
+    wrap.append(node('dt', '', label), dd);
     return wrap;
+}
+
+/* Real / Fake badge: "Real" = the record exists in the issuer's register. */
+function authenticityBadge(real, text) {
+    const badge = node('span', `auth-badge ${real ? 'is-real' : 'is-fake'}`);
+    badge.append(node('b', '', real ? 'REAL' : 'FAKE'), document.createTextNode(` ${text}`));
+    return badge;
+}
+
+function showFake(title, detail, facts) {
+    result.hidden = false;
+    result.className = 'result is-bad is-fake';
+    const head = node('div', 'result-head');
+    const text = node('div');
+    text.append(node('span', '', title), node('small', '', detail));
+    head.append(icon('x'), text);
+    const list = node('dl', 'facts');
+    list.append(...facts);
+    const foot = node('div', 'result-foot');
+    const again = node('button', 'btn btn-sm', 'Check another');
+    again.type = 'button';
+    again.addEventListener('click', resetAll);
+    foot.append(again);
+    result.replaceChildren(head, list, foot);
+}
+
+function resetAll() {
+    result.hidden = true; idInput.value = ''; fileInput.value = ''; resetDrop(); selectTab('id'); idInput.focus();
+}
+
+/* A real ID on a doctored PDF: compare what the PDF says with the issuer's record. */
+function squash(text) { return String(text || '').toLowerCase().replace(/[^a-z0-9]/g, ''); }
+
+function pdfMismatches(item, pdfText) {
+    if (item.kind !== 'CERTIFICATE') return [];
+    const haystack = squash(pdfText);
+    const fields = [['Student', item.student_name], ['Student ID', item.student_id], ['Course', item.course],
+        ['Institution', item.institution], ['Issue date', item.issue_date]];
+    return fields.filter(([, value]) => {
+        const needle = squash(value);
+        return needle && needle.length <= 80 && !haystack.includes(needle);
+    }).map(([label]) => label);
 }
 
 function showResult(item) {
@@ -64,6 +108,7 @@ function showResult(item) {
     result.hidden = false;
     result.className = `result ${revoked ? 'is-bad' : 'is-ok'}`;
 
+    const issuer = isDocument ? item.issuing_institution : item.institution;
     const head = node('div', 'result-head');
     const text = node('div');
     if (revoked) {
@@ -76,6 +121,9 @@ function showResult(item) {
     head.append(icon(revoked ? 'x' : 'check'), text);
 
     const facts = node('dl', 'facts');
+    facts.append(row('Authenticity', authenticityBadge(true, revoked
+        ? `Issued by ${issuer}, later revoked`
+        : `Issued by ${issuer}`), true));
     if (isDocument) {
         facts.append(
             row('Holder', item.holder_name), row('Document', item.doc_type_label),
@@ -94,21 +142,36 @@ function showResult(item) {
     const foot = node('div', 'result-foot');
     const again = node('button', 'btn btn-sm', 'Check another');
     again.type = 'button';
-    again.addEventListener('click', () => { result.hidden = true; idInput.value = ''; fileInput.value = ''; resetDrop(); selectTab('id'); idInput.focus(); });
+    again.addEventListener('click', resetAll);
     foot.append(again);
     result.replaceChildren(head, facts, foot);
 }
 
-async function verify(id) {
+/* pdfText is only passed when the ID was read from an uploaded PDF. */
+async function verify(id, pdfText) {
     showHeadOnly('working', 'search', 'Checking…');
     const response = await fetch(`/api/verify/${encodeURIComponent(id)}`);
     const data = await response.json().catch(() => ({}));
     if (!response.ok) {
-        const detail = typeof data.detail === 'string' ? data.detail : '';
-        throw new Error(response.status === 404 && !detail.startsWith('Unknown')
-            ? `No record found for ${id}. Check the ID and try again.` : detail || 'Verification failed.');
+        if (response.status === 404 && data.authenticity === 'FAKE') {
+            showFake('Fake: not issued by any institution',
+                'No record with this ID exists in the register. Do not trust this document.',
+                [row('Authenticity', authenticityBadge(false, 'No matching record'), true), row('ID checked', id, true)]);
+            result.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            return;
+        }
+        throw new Error((typeof data.detail === 'string' && data.detail) || 'Verification failed.');
     }
-    showResult(data);
+    const wrong = pdfText === undefined ? [] : pdfMismatches(data, pdfText);
+    if (wrong.length) {
+        showFake('Fake: this PDF does not match the issued record',
+            `The ID is real, but the ${wrong.join(', ').toLowerCase()} in this PDF differ${wrong.length === 1 ? 's' : ''} from what the institution issued.`,
+            [row('Authenticity', authenticityBadge(false, 'PDF altered or forged'), true),
+                row('Record says', `${data.student_name} · ${data.course} · ${data.institution}`, true),
+                row('Certificate ID', data.certificate_id, true)]);
+    } else {
+        showResult(data);
+    }
     result.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
@@ -247,7 +310,7 @@ $('pdf-form').addEventListener('submit', async (event) => {
         const id = text.match(/(?:CERT|DOC)-[A-Z0-9]+/i)?.[0];
         if (!id) throw new Error('No CertiChain certificate or document ID was found in this PDF.');
         idInput.value = id.toUpperCase();
-        await verify(id.toUpperCase());
+        await verify(id.toUpperCase(), text);
     } catch (error) { fail(error); }
 });
 

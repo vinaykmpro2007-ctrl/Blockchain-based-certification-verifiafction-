@@ -3,7 +3,10 @@ if (!token) window.location.replace('/login.html');
 
 const $ = (id) => document.getElementById(id);
 
-let me = null;                 // { username, institution }
+let me = null;                 // { username, institution, verify_base_url }
+let people = [];
+let selectedPerson = null;     // person_ref
+let checkingDoc = null;        // document_id shown in the check dialog
 let summary = null;            // latest revocation summary
 let certificates = [];
 let documents = [];
@@ -266,7 +269,9 @@ $('download-pdf').addEventListener('click', async (event) => {
 $('copy-link').addEventListener('click', async () => {
     const cert = selectedCertificate();
     if (!cert) return;
-    const url = `${location.origin}/user.html?id=${encodeURIComponent(cert.certificate_id)}`;
+    // The server gives an address phones can reach (never plain localhost).
+    const base = (me && me.verify_base_url) || location.origin;
+    const url = `${base}/user.html?id=${encodeURIComponent(cert.certificate_id)}`;
     try {
         await navigator.clipboard.writeText(url);
         toast('Verification link copied');
@@ -303,6 +308,27 @@ function today() { return new Date().toISOString().slice(0, 10); }
 
 /* ---------- Documents ---------- */
 
+function sameInstitution(name) { return !!me && normalize(name) === normalize(me.institution); }
+
+/* View/Check works for any institution's document; Revoke only for your own. */
+function documentActions(doc) {
+    const box = el('div', 'row-actions');
+    const view = el('button', 'btn btn-sm', 'View / Check');
+    view.type = 'button';
+    view.addEventListener('click', () => openDocument(doc));
+    box.append(view);
+    if (doc.status !== 'REVOKED' && canRevoke(doc.issuing_institution, doc.issued_by)) {
+        const button = el('button', 'btn btn-sm btn-quiet', 'Revoke');
+        button.type = 'button';
+        button.addEventListener('click', () => openRevoke({
+            kind: 'documents', id: doc.document_id,
+            label: `${doc.doc_type_label} of ${doc.holder_name} (${doc.document_id})`
+        }));
+        box.append(button);
+    }
+    return box;
+}
+
 async function refreshDocuments() {
     documents = await api('/api/documents');
     const body = $('documents-table').querySelector('tbody');
@@ -315,20 +341,147 @@ async function refreshDocuments() {
         if (doc.details) {
             docCell.append(el('span', 'doc-sub', `${doc.details.total_marks}/${doc.details.max_total_marks} · ${doc.details.percentage}% · ${doc.details.result}`));
         }
-        const action = cell('');
-        if (doc.status !== 'REVOKED' && canRevoke(doc.issuing_institution, doc.issued_by)) {
-            const button = el('button', 'btn btn-sm btn-quiet', 'Revoke');
-            button.type = 'button';
-            button.addEventListener('click', () => openRevoke({
-                kind: 'documents', id: doc.document_id,
-                label: `${doc.doc_type_label} of ${doc.holder_name} (${doc.document_id})`
-            }));
-            action.append(button);
-        }
-        row.append(cell(doc.holder_name), docCell, cell(doc.issuing_institution), cell(doc.number_masked, 'mono'), cell(pill(doc.status)), action);
+        const action = cell(documentActions(doc));
+        const issuer = cell(doc.issuing_institution);
+        if (!sameInstitution(doc.issuing_institution)) issuer.append(el('span', 'tag-other', 'Other institution'));
+        row.append(cell(doc.holder_name), docCell, issuer, cell(doc.number_masked, 'mono'), cell(pill(doc.status)), action);
         body.append(row);
     }
     renderStats();
+}
+
+/* ---------- Document view / check dialog ---------- */
+
+const docDialog = $('doc-dialog');
+
+function factRow(label, value, className) {
+    const wrap = el('div');
+    wrap.append(el('dt', '', label), el('dd', className, value));
+    return wrap;
+}
+
+function openDocument(doc) {
+    checkingDoc = doc.document_id;
+    $('doc-title').textContent = `${doc.doc_type_label} of ${doc.holder_name}`;
+    const facts = $('doc-facts');
+    facts.replaceChildren(
+        factRow('Holder', doc.holder_name),
+        factRow('Person ref', doc.person_ref || '', 'mono'),
+        factRow('Document', doc.doc_type_label),
+        factRow('Issued by', doc.issuing_institution + (sameInstitution(doc.issuing_institution) ? ' (your institution)' : ' (another institution)')),
+        factRow('Issued by admin', doc.issued_by || '—'),
+        factRow('Issued on', doc.issue_date),
+        factRow('Number', doc.number_masked, 'mono'),
+        factRow('Status', doc.status === 'REVOKED' ? `Revoked${doc.revoked_at ? ' on ' + doc.revoked_at.slice(0, 10) : ''}${doc.revoke_reason ? ': ' + doc.revoke_reason : ''}` : 'Issued and valid'),
+        factRow('Document ID', doc.document_id, 'mono'),
+        factRow('Record hash', doc.record_hash || '—', 'mono'));
+    const marks = $('doc-marks');
+    marks.hidden = !doc.details;
+    if (doc.details) {
+        const body = marks.querySelector('tbody');
+        body.replaceChildren();
+        for (const subject of doc.details.subjects) {
+            const row = el('tr');
+            row.append(cell(subject.name), cell(String(subject.marks_obtained), 'num'), cell(String(subject.max_marks), 'num'));
+            body.append(row);
+        }
+        const total = el('tr');
+        total.append(cell(`Total · ${doc.details.percentage}% · ${doc.details.result} (${doc.details.exam_year})`),
+            cell(String(doc.details.total_marks), 'num'), cell(String(doc.details.max_total_marks), 'num'));
+        total.querySelectorAll('td').forEach((td) => { td.style.fontWeight = '700'; });
+        body.append(total);
+    }
+    $('doc-check-number').value = '';
+    showCheckResult(null);
+    docDialog.showModal();
+    runCheck();   // integrity check runs straight away; the number check is optional
+}
+
+function showCheckResult(result, error) {
+    const box = $('doc-check-result');
+    box.hidden = !result && !error;
+    box.className = 'check-result';
+    box.replaceChildren();
+    if (error) { box.classList.add('is-fake'); box.textContent = error; return; }
+    if (!result) return;
+    const real = result.authenticity === 'REAL';
+    box.classList.add(real ? 'is-real' : 'is-fake');
+    box.append(document.createTextNode(real ? 'REAL: issued by the institution and unaltered' : 'FAKE: this record does not check out'));
+    const notes = [];
+    notes.push(result.integrity_ok ? 'Record fingerprint matches what was issued.' : 'Record fingerprint does NOT match: the stored record was altered.');
+    if (result.number_matches === true) notes.push('The number you typed matches the record.');
+    if (result.number_matches === false) notes.push('The number you typed does NOT match the record.');
+    if (result.status === 'REVOKED') notes.push('This document has been revoked.');
+    box.append(el('small', '', notes.join(' ')));
+}
+
+async function runCheck() {
+    if (!checkingDoc) return;
+    const button = $('doc-check-submit');
+    setBusy(button, true, 'Checking…');
+    try {
+        const result = await api(`/api/documents/${encodeURIComponent(checkingDoc)}/check`, {
+            method: 'POST', body: JSON.stringify({ document_number: $('doc-check-number').value.trim() || null })
+        });
+        showCheckResult(result);
+    } catch (problem) { showCheckResult(null, problem.message); }
+    finally { setBusy(button, false); }
+}
+
+$('doc-check-form').addEventListener('submit', (event) => { event.preventDefault(); runCheck(); });
+$('doc-close').addEventListener('click', () => docDialog.close());
+$('doc-done').addEventListener('click', () => docDialog.close());
+docDialog.addEventListener('click', (event) => { if (event.target === docDialog) docDialog.close(); });
+
+/* ---------- People: all documents of a person, from every institution ---------- */
+
+function renderPeople() {
+    const list = $('people-list');
+    list.replaceChildren();
+    $('people-count').textContent = `${people.length} ${people.length === 1 ? 'person' : 'people'}`;
+    $('people-empty').hidden = people.length > 0;
+    for (const person of people) {
+        const item = el('button', `person-item${person.person_ref === selectedPerson ? ' is-selected' : ''}`);
+        item.type = 'button';
+        item.setAttribute('role', 'listitem');
+        item.append(el('strong', '', person.full_name),
+            el('span', '', `${person.person_ref} · ${person.document_count} document${person.document_count === 1 ? '' : 's'}`),
+            el('span', '', person.institutions.join(', ') || 'No documents yet'));
+        item.addEventListener('click', () => showPerson(person.person_ref));
+        list.append(item);
+    }
+}
+
+let peopleTimer = null;
+async function refreshPeople() {
+    people = await api(`/api/persons?q=${encodeURIComponent($('people-search').value.trim())}`);
+    renderPeople();
+}
+$('people-search').addEventListener('input', () => {
+    clearTimeout(peopleTimer);
+    peopleTimer = setTimeout(() => refreshPeople().catch((error) => toast(error.message, true)), 250);
+});
+
+async function showPerson(ref) {
+    selectedPerson = ref;
+    renderPeople();
+    try {
+        const person = await api(`/api/persons/${encodeURIComponent(ref)}`);
+        $('person-title').textContent = person.full_name;
+        $('person-sub').textContent = `${person.person_ref} · born ${person.date_of_birth} · ${person.documents.length} document${person.documents.length === 1 ? '' : 's'} from ${person.institutions.length} institution${person.institutions.length === 1 ? '' : 's'}`;
+        const body = $('person-docs').querySelector('tbody');
+        body.replaceChildren();
+        $('person-docs-wrap').hidden = person.documents.length === 0;
+        for (const doc of person.documents) {
+            const row = el('tr');
+            const issuer = cell(doc.issuing_institution);
+            if (!sameInstitution(doc.issuing_institution)) issuer.append(el('span', 'tag-other', 'Other'));
+            const docCell = cell(doc.doc_type_label);
+            docCell.append(el('span', 'doc-sub', doc.number_masked));
+            row.append(docCell, issuer, cell(pill(doc.status)), cell(documentActions(doc)));
+            body.append(row);
+        }
+    } catch (error) { toast(error.message, true); }
 }
 
 /* ---------- Activity log ---------- */
@@ -431,6 +584,7 @@ $('revoke-form').addEventListener('submit', async (event) => {
         renderSummary(result.summary);
         toast(`${revokeTarget.label} revoked`);
         await Promise.all([refreshCertificates(), refreshDocuments(), refreshRevocationLog()]);
+        if (selectedPerson) await showPerson(selectedPerson);
     } catch (error) { $('revoke-error').textContent = error.message; }
     finally { setBusy(button, false); }
 });
@@ -449,6 +603,6 @@ $('revoke-form').addEventListener('submit', async (event) => {
         $('team-inst').value = me.institution;
         document.querySelectorAll('.inst-name').forEach((node) => { node.textContent = me.institution; });
         $('overview-sub').textContent = `Signed in as ${me.username} at ${me.institution}.`;
-        await Promise.all([refreshCertificates(), refreshDocuments(), refreshRevocationLog(), refreshSummary(), refreshTeam()]);
+        await Promise.all([refreshCertificates(), refreshDocuments(), refreshRevocationLog(), refreshSummary(), refreshTeam(), refreshPeople()]);
     } catch (error) { toast(error.message, true); }
 })();

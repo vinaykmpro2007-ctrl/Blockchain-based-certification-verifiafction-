@@ -1,27 +1,2 @@
-# Environment variables and secrets
-.env
-.env.*
-!.env.example
-
-# Python virtual environment
-.venv/
-venv/
-env/
-
-# Python cache files
-__pycache__/
-*.py[cod]
-
-# Local databases
-*.db
-*.sqlite3
-
-# Test and coverage files
-.pytest_cache/
-.coverage
-htmlcov/
-
-# Editor and operating system files
-.vscode/
-.DS_Store
-Thumbs.db
+# Created by venv; see https://docs.python.org/3/library/venv.html
+*

@@ -72,10 +72,15 @@
 
                 <div class="alert alert-info" id="admin-note">
                     <svg class="icon" aria-hidden="true"><use href="/static/img/icons.svg#i-info"></use></svg>
-                    <div>New admin accounts are added by an existing admin of your institution, from the Team page of the dashboard.</div>
+                    <div>Enter your institution name, username and password. New admin accounts are added by an existing admin of your institution, from the Team page of the dashboard.</div>
                 </div>
 
                 <form id="login-form" novalidate>
+                    <div class="field" id="institution-field">
+                        <label for="login-institution">Institution name</label>
+                        <input class="input" type="text" id="login-institution" name="institution" autocomplete="organization" placeholder="e.g. NIE Mysuru" maxlength="200">
+                        <span class="hint">An admin can only sign in for the institution their account belongs to.</span>
+                    </div>
                     <div class="field">
                         <label for="login-name">Username</label>
                         <input class="input" type="text" id="login-name" name="username" autocomplete="username" autocapitalize="none" spellcheck="false" required>

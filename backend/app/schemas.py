@@ -167,3 +167,9 @@ class DocumentCreate(BaseModel):
 
 class NumberCheck(BaseModel):
     document_number: str = Field(min_length=1, max_length=40)
+
+
+class DocumentCheck(BaseModel):
+    """Optional number read from the paper document, for administrators."""
+
+    document_number: str | None = Field(default=None, max_length=40)

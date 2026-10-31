@@ -29,6 +29,7 @@
                 <a href="#overview" data-nav="overview"><svg class="icon" aria-hidden="true"><use href="/static/img/icons.svg#i-grid"></use></svg>Overview</a>
                 <a href="#certificates" data-nav="certificates"><svg class="icon" aria-hidden="true"><use href="/static/img/icons.svg#i-file"></use></svg>Certificates</a>
                 <a href="#documents" data-nav="documents"><svg class="icon" aria-hidden="true"><use href="/static/img/icons.svg#i-id"></use></svg>Documents</a>
+                <a href="#people" data-nav="people"><svg class="icon" aria-hidden="true"><use href="/static/img/icons.svg#i-user"></use></svg>People</a>
                 <a href="#team" data-nav="team"><svg class="icon" aria-hidden="true"><use href="/static/img/icons.svg#i-users"></use></svg>Team</a>
                 <a href="#activity" data-nav="activity"><svg class="icon" aria-hidden="true"><use href="/static/img/icons.svg#i-history"></use></svg>Activity</a>
 
@@ -243,6 +244,40 @@
                 </div>
             </section>
 
+            <!-- ============ People ============ -->
+            <section class="view" data-view="people" aria-labelledby="h-people" hidden>
+                <header class="page-head">
+                    <div>
+                        <h1 id="h-people">People</h1>
+                        <p class="page-sub">Find a person to see every document issued to them, including those from other institutions. You can view and check them all; you can revoke only your own institution's.</p>
+                    </div>
+                </header>
+                <div class="two-col two-col-even">
+                    <div class="card card-pad">
+                        <div class="card-head">
+                            <div><h2>Search</h2><p class="card-sub" id="people-count"></p></div>
+                        </div>
+                        <label class="sr-only" for="people-search">Search by name, person reference or document ID</label>
+                        <input class="input" id="people-search" type="search" placeholder="Name, PER-… or DOC-…" autocomplete="off">
+                        <div class="people-list" id="people-list" role="list"></div>
+                        <div class="empty" id="people-empty" hidden>
+                            <svg class="icon" aria-hidden="true"><use href="/static/img/icons.svg#i-search"></use></svg>
+                            <strong>No one found</strong>
+                            <span>Try another name or reference.</span>
+                        </div>
+                    </div>
+                    <div class="card card-pad">
+                        <div class="card-head"><div><h2 id="person-title">Documents</h2><p class="card-sub" id="person-sub">Select a person to see their documents.</p></div></div>
+                        <div class="table-wrap" id="person-docs-wrap" hidden>
+                            <table class="table" id="person-docs">
+                                <thead><tr><th scope="col">Document</th><th scope="col">Issued by</th><th scope="col">Status</th><th scope="col"><span class="sr-only">Actions</span></th></tr></thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
             <!-- ============ Team ============ -->
             <section class="view" data-view="team" aria-labelledby="h-team" hidden>
                 <header class="page-head">
@@ -345,6 +380,36 @@
                 <button class="btn btn-danger" type="submit" id="revoke-confirm">Revoke permanently</button>
             </div>
         </form>
+    </dialog>
+
+    <dialog class="dialog" id="doc-dialog" aria-labelledby="doc-title">
+        <div class="dialog-head">
+            <h2 id="doc-title">Document</h2>
+            <button class="icon-btn" type="button" id="doc-close" aria-label="Close">
+                <svg class="icon" aria-hidden="true"><use href="/static/img/icons.svg#i-x"></use></svg>
+            </button>
+        </div>
+        <div class="dialog-body">
+            <dl class="facts facts-admin" id="doc-facts"></dl>
+            <div class="marks" id="doc-marks" hidden>
+                <table class="table">
+                    <thead><tr><th scope="col">Subject</th><th scope="col">Marks</th><th scope="col">Max</th></tr></thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+            <form id="doc-check-form" class="check-box" novalidate>
+                <label for="doc-check-number">Check the number on the paper document <span class="sub">(optional)</span></label>
+                <div class="check-row">
+                    <input class="input" id="doc-check-number" type="text" autocomplete="off" spellcheck="false" placeholder="Aadhaar, PAN or register number">
+                    <button class="btn btn-primary" id="doc-check-submit" type="submit">Check</button>
+                </div>
+                <p class="hint">The number is compared on the server and never stored or shown.</p>
+            </form>
+            <div class="check-result" id="doc-check-result" role="status" aria-live="polite" hidden></div>
+        </div>
+        <div class="dialog-foot">
+            <button class="btn" type="button" id="doc-done">Close</button>
+        </div>
     </dialog>
 
     <div class="toasts" id="toasts" aria-live="polite"></div>

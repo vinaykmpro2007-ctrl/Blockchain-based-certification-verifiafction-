@@ -2,5 +2,9 @@
 __pycache__/
 *.pyc
 node_modules/
-.venv/.venv/
+.venv/
 .pytest_cache/
+
+# Backend database
+backend/certichain.db
+certichain.db

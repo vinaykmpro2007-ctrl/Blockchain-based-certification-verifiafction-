@@ -27,3 +27,11 @@ class AdminResponse(BaseModel):
     username: str
     institution: str
     is_active: int
+
+
+class AdminLoginRequest(BaseModel):
+    """Administrator sign-in. The institution must match the account's own."""
+
+    username: str = Field(min_length=3, max_length=100)
+    password: str = Field(min_length=1, max_length=128)
+    institution: str = Field(min_length=2, max_length=200)

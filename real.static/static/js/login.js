@@ -1,6 +1,8 @@
 const roleButtons = document.querySelectorAll('[data-role]');
 const form = document.getElementById('login-form');
 const nameInput = document.getElementById('login-name');
+const institutionInput = document.getElementById('login-institution');
+const institutionField = document.getElementById('institution-field');
 const passwordInput = document.getElementById('login-password');
 const submit = document.getElementById('login-submit');
 const errorBox = document.getElementById('login-error');
@@ -25,6 +27,7 @@ function render() {
     });
     modeTabs.hidden = role === 'admin';
     adminNote.hidden = role !== 'admin';
+    institutionField.hidden = role !== 'admin';
     tabSignin.setAttribute('aria-selected', String(!creating));
     tabSignup.setAttribute('aria-selected', String(creating));
     hint.hidden = !creating;
@@ -53,6 +56,8 @@ form.addEventListener('submit', async (event) => {
     event.preventDefault();
     errorBox.textContent = '';
     const username = nameInput.value.trim();
+    const institution = institutionInput.value.trim().replace(/\s+/g, ' ');
+    if (role === 'admin' && institution.length < 2) { errorBox.textContent = 'Enter your institution name.'; institutionInput.focus(); return; }
     if (!username || !passwordInput.value) { errorBox.textContent = 'Enter your username and password.'; return; }
     if (creating && passwordInput.value.length < 12) { errorBox.textContent = 'Use a password of at least 12 characters.'; return; }
 
@@ -61,7 +66,7 @@ form.addEventListener('submit', async (event) => {
     try {
         const response = await fetch(endpoint, {
             method: 'POST', headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username, password: passwordInput.value })
+            body: JSON.stringify(role === 'admin' ? { username, password: passwordInput.value, institution } : { username, password: passwordInput.value })
         });
         const result = await response.json().catch(() => ({}));
         if (!response.ok) {

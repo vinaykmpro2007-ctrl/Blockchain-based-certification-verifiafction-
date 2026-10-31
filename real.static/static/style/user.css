@@ -80,6 +80,12 @@
 .result.is-bad .facts dd.keep { text-decoration: none; }
 .result-foot { padding: 0 16px 14px; }
 
+/* Real / Fake badge */
+.auth-badge { display: inline-flex; flex-wrap: wrap; align-items: baseline; gap: 6px; padding: 4px 10px; font-size: .86rem; font-weight: 600; border-radius: 999px; }
+.auth-badge b { font-size: .74rem; letter-spacing: .08em; }
+.auth-badge.is-real { color: #08603f; background: var(--ok-bg); }
+.auth-badge.is-fake { color: #8d1a30; background: var(--bad-bg); }
+
 /* ---------- Sections ---------- */
 .section { padding-block: clamp(44px, 7vw, 80px); }
 .section-alt { background: #fff; border-block: 1px solid var(--line); }
